@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeForce Now Campus Arena - СИСТЕМА ЗАПУЩЕНА</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Terminal Boot Screen */
+        #bootScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .boot-line {
+            margin: 5px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: typeIn 0.5s forwards;
+            font-size: 18px;
+        }
+
+        .boot-line:nth-child(1) { animation-delay: 0.5s; }
+        .boot-line:nth-child(2) { animation-delay: 1s; }
+        .boot-line:nth-child(3) { animation-delay: 1.5s; }
+        .boot-line:nth-child(4) { animation-delay: 2s; }
+        .boot-line:nth-child(5) { animation-delay: 2.5s; }
+        .boot-line:nth-child(6) { animation-delay: 3s; }
+        .boot-line:nth-child(7) { animation-delay: 3.5s; }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+
+        .progress-bar {
+            width: 400px;
+            height: 6px;
+            background: #003300;
+            margin-top: 30px;
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid #00ff00;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #00ff00;
+            width: 0%;
+            animation: progressLoad 4s ease-in-out forwards;
+            animation-delay: 1s;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        /* Matrix Rain Effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Main Content */
+        #mainContent {
+            opacity: 0;
+            transform: translateY(50px);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        .header-banner {
+            background: linear-gradient(90deg, #001a00 0%, #003300 100%);
+            padding: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(0, 255, 0, 0.3);
+            border-bottom: 2px solid #00ff00;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #00ff00;
+            animation: scan 4s linear infinite;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .terminal-text {
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            max-width: 900px;
+            margin: 0 auto;
+            border: 2px solid #00ff00;
+            padding: 30px;
+            background: rgba(0, 255, 0, 0.05);
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .command-line {
+            margin: 15px 0;
+            opacity: 0;
+            animation: commandType 0.8s forwards;
+            font-size: 16px;
+        }
+
+        .command-line:nth-child(1) { animation-delay: 0.5s; }
+        .command-line:nth-child(2) { animation-delay: 1s; }
+        .command-line:nth-child(3) { animation-delay: 1.5s; }
+        .command-line:nth-child(4) { animation-delay: 2s; }
+
+        .prompt {
+            color: #00ff00;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        /* Benefits Grid */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 60px 0;
+        }
+        
+        .benefit-card {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+            opacity: 0;
+            transform: translateY(30px);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .benefit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .benefit-card:hover::before {
+            left: 100%;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 35px rgba(0, 255, 0, 0.4);
+            border-color: #00ff00;
+        }
+        
+        .benefit-card h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        
+        .benefit-card p {
+            color: #00cc00;
+            line-height: 1.6;
+        }
+
+        .benefit-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        /* Registration Section */
+        .registration-section {
+            background: rgba(0, 255, 0, 0.03);
+            padding: 70px 0;
+            margin: 60px 0;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 0, 0.2);
+            opacity: 0;
+            transform: translateY(30px);
+            position: relative;
+        }
+
+        .registration-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        .form-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: rgba(0, 255, 0, 0.05);
+            padding: 45px;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 35px rgba(0, 255, 0, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: bold;
+            color: #00ff00;
+            font-size: 16px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.9);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .form-group input::placeholder {
+            color: #008800;
+            opacity: 0.7;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 255, 0, 0.4);
+            transform: scale(1.02);
+            background: rgba(0, 0, 0, 0.95);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #00ff00 0%, #008800 100%);
+            color: #000;
+            border: none;
+            padding: 20px 45px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 255, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 255, 0, 0.6);
+            background: linear-gradient(90deg, #00ff00 0%, #00cc00 100%);
+        }
+
+        /* Additional Info Sections */
+        .info-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 60px 0;
+        }
+
+        .info-card {
+            background: rgba(0, 255, 0, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            opacity: 0;
+            transform: translateY(30px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            border-color: #00ff00;
+        }
+
+        .info-card h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .info-card p {
+            color: #00cc00;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 60px;
+            border-top: 2px solid rgba(0, 255, 0, 0.2);
+            color: #00cc00;
+            opacity: 0;
+        }
+
+        /* Animations */
+        @keyframes typeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes progressLoad {
+            to { width: 100%; }
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes commandType {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes matrixRain {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(1000%);
+                opacity: 0;
+            }
+        }
+
+        /* Transition Screen */
+        .transition-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .transition-text {
+            font-size: 24px;
+            color: #00ff00;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix Rain Background -->
+    <div class="matrix-rain" id="matrixRain"></div>
+
+    <!-- Transition Screen -->
+    <div class="transition-screen" id="transitionScreen">
+        <div class="transition-text" id="transitionText">ПЕРЕХОД В РАЗДЕЛ...</div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Boot Screen -->
+    <div id="bootScreen">
+        <div class="boot-line">> ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ...</div>
+        <div class="boot-line">> ЗАГРУЗКА ОСНОВНЫХ МОДУЛЕЙ...</div>
+        <div class="boot-line">> ПРОВЕРКА ЦЕЛОСТНОСТИ ОБОРУДОВАНИЯ...</div>
+        <div class="boot-line">> ГРАФИЧЕСКИЙ ПРОЦЕССОР: NVIDIA GEFORCE RTX - ОНЛАЙН</div>
+        <div class="boot-line">> СЕТЬ: 10ГБ/С - СТАБИЛЬНО</div>
+        <div class="boot-line">> ЗАПУСК ПЛАТФОРМЫ CAMPUS ARENA...</div>
+        <div class="boot-line">> СИСТЕМА ГОТОВА К РАБОТЕ <span class="cursor">_</span></div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent">
+        <!-- Header -->
+        <div class="header-banner">
+            <div class="scan-line"></div>
+            <div>GeForce Now Campus Arena — СИСТЕМА АКТИВИРОВАНА</div>
+            <div class="header-stats">
+                <span>СТАТУС: <span style="color: #00ff00">ОПЕРАТИВНЫЙ</span></span>
+                <span>ПОЛЬЗОВАТЕЛИ: 0</span>
+                <span>СЕРВЕРЫ: 12</span>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="terminal-text">
+                    <div class="command-line">
+                        <span class="prompt">root@campus-arena:~$</span> статус_платформы --подробно
+                    </div>
+                    <div class="command-line">
+                        <span class="prompt">></span> ПЛАТФОРМА: GEFORCE NOW CAMPUS ARENA
+                    </div>
+                    <div class="command-line">
+                        <span class="prompt">></span> СТАТУС: <span style="color: #00ff00">АКТИВНА</span>
+                    </div>
+                    <div class="command-line">
+                        <span class="prompt">></span> ГОТОВА К РАЗВЕРТЫВАНИЮ В ВАШЕМ УНИВЕРСИТЕТЕ <span class="blink">_</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Benefits Grid -->
+            <section class="benefits-grid">
+                <div class="benefit-card" onclick="showTransition('БЫСТРОЕ РАЗВЕРТЫВАНИЕ', 'Система разворачивается за 2 недели. Полная интеграция с инфраструктурой университета. Автоматическая настройка сетевых параметров.')">
+                    <span class="benefit-icon">⚡</span>
+                    <h3>БЫСТРОЕ РАЗВЕРТЫВАНИЕ</h3>
+                    <p>Полная установка и настройка за 14 дней. Интеграция с существующей IT-инфраструктурой.</p>
+                </div>
+                
+                <div class="benefit-card" onclick="showTransition('МАСШТАБИРУЕМОСТЬ', 'Поддержка до 500 одновременных игроков. Динамическое распределение ресурсов. Автоматическое масштабирование под нагрузку.')">
+                    <span class="benefit-icon">🎮</span>
+                    <h3>МАСШТАБИРУЕМОСТЬ</h3>
+                    <p>Одновременное участие сотен студентов в турнирах. Стабильная работа при пиковых нагрузках.</p>
+                </div>
+                
+                <div class="benefit-card" onclick="showTransition('ИНТЕГРАЦИЯ', 'Поддержка университетской системы аутентификации. Интеграция с расписанием занятий. Совместимость с LMS системами.')">
+                    <span class="benefit-icon">🔗</span>
+                    <h3>ИНТЕГРАЦИЯ</h3>
+                    <p>Авторизация через учетные записи университета. Единая система доступа для студентов и преподавателей.</p>
+                </div>
+
+                <div class="benefit-card" onclick="showTransition('AI МОДЕРАЦИЯ', 'Нейросетевая система обнаружения нарушений. Автоматический анализ игрового процесса. Система репутации игроков.')">
+                    <span class="benefit-icon">🤖</span>
+                    <h3>AI МОДЕРАЦИЯ</h3>
+                    <p>Автоматическое обнаружение нарушений и читерства. Умная система анализа игровых сессий.</p>
+                </div>
+
+                <div class="benefit-card" onclick="showTransition('ТЕХНИЧЕСКАЯ ПОДДЕРЖКА', 'Круглосуточная техническая поддержка. Мониторинг системы 24/7. Быстрое решение проблем.')">
+                    <span class="benefit-icon">🔧</span>
+                    <h3>ТЕХНИЧЕСКАЯ ПОДДЕРЖКА</h3>
+                    <p>Профессиональная поддержка и сопровождение. Гарантированное время реакции на инциденты.</p>
+                </div>
+
+                <div class="benefit-card" onclick="showTransition('АНАЛИТИКА И ОТЧЕТЫ', 'Детальная аналитика использования. Отчеты по активности студентов. Статистика турниров и мероприятий.')">
+                    <span class="benefit-icon">📊</span>
+                    <h3>АНАЛИТИКА И ОТЧЕТЫ</h3>
+                    <p>Подробные отчеты и аналитика. Мониторинг активности и эффективности использования платформы.</p>
+                </div>
+            </section>
+
+            <!-- Registration Section -->
+            <section class="registration-section">
+                <div class="form-container">
+                    <h2 style="text-align: center; margin-bottom: 35px; color: #00ff00; text-shadow: 0 0 10px rgba(0,255,0,0.5);">
+                        ЗАПРОС ДОСТУПА К СИСТЕМЕ
+                    </h2>
+                    <form id="registrationForm">
+                        <div class="form-group">
+                            <label for="userName">ВАШЕ ФИО *</label>
+                            <input type="text" id="userName" name="userName" required placeholder="ВВЕДИТЕ ВАШЕ ПОЛНОЕ ИМЯ">
+                        </div>
+                        <div class="form-group">
+                            <label for="userUniversity">УЧЕБНОЕ ЗАВЕДЕНИЕ *</label>
+                            <input type="text" id="userUniversity" name="userUniversity" required placeholder="НАЗВАНИЕ УНИВЕРСИТЕТА">
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">ЭЛЕКТРОННАЯ ПОЧТА *</label>
+                            <input type="email" id="userEmail" name="userEmail" required placeholder="EMAIL ДЛЯ СВЯЗИ">
+                        </div>
+                        <div class="form-group">
+                            <label for="userPhone">ТЕЛЕФОН</label>
+                            <input type="tel" id="userPhone" name="userPhone" placeholder="НОМЕР ТЕЛЕФОНА">
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">ВАША РОЛЬ</label>
+                            <input type="text" id="userRole" name="userRole" placeholder="СТУДЕНТ / ПРЕПОДАВАТЕЛЬ / АДМИНИСТРАТОР">
+                        </div>
+                        <button type="submit" class="btn-primary">ЗАРЕГИСТРИРОВАТЬСЯ В СИСТЕМЕ</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Additional Info -->
+            <section class="info-sections">
+                <div class="info-card" onclick="showTransition('ТУРНИРЫ И МЕРОПРИЯТИЯ', 'Организация киберспортивных турниров. Проведение факультетских соревнований. Межвузовские чемпионаты. Система рейтингов и наград.')">
+                    <h3>🏆 ТУРНИРЫ И МЕРОПРИЯТИЯ</h3>
+                    <p>Полный цикл организации киберспортивных событий от регистрации до награждения победителей.</p>
+                </div>
+
+                <div class="info-card" onclick="showTransition('ОБРАЗОВАТЕЛЬНЫЕ КУРСЫ', 'Курсы по геймдизайну и разработке. Программирование игровых механик. 3D-моделирование и анимация.')">
+                    <h3>📚 ОБРАЗОВАТЕЛЬНЫЕ КУРСЫ</h3>
+                    <p>Интеграция с учебными программами. Курсы по разработке игр и компьютерной графике.</p>
+                </div>
+
+                <div class="info-card" onclick="showTransition('ТЕХНИЧЕСКИЕ ТРЕБОВАНИЯ', 'Минимальные требования к оборудованию. Рекомендации по сетевой инфраструктуре. Технические характеристики серверов.')">
+                    <h3>💻 ТЕХНИЧЕСКИЕ ТРЕБОВАНИЯ</h3>
+                    <p>Подробные технические спецификации и рекомендации по развертыванию системы.</p>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>GeForce Now Campus Arena © 2025 | СИСТЕМА УПРАВЛЕНИЯ КИБЕРСПОРТИВНЫМИ ПЛАТФОРМАМИ</p>
+                <p style="margin-top: 10px; font-size: 14px; opacity: 0.7;">ВЕРСИЯ 2.1.4 | СБОРКА 7842</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        function createMatrixRain() {
+            const matrix = document.getElementById('matrixRain');
+            const characters = '01010101010101010101010101010101アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            for (let i = 0; i < 80; i++) {
+                const drop = document.createElement('div');
+                drop.style.position = 'absolute';
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.top = '-50px';
+                drop.style.color = '#00ff00';
+                drop.style.fontSize = (Math.random() * 8 + 12) + 'px';
+                drop.style.opacity = Math.random() * 0.4 + 0.1;
+                drop.style.animation = `matrixRain ${Math.random() * 4 + 3}s linear infinite`;
+                drop.style.animationDelay = Math.random() * 8 + 's';
+                drop.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+                matrix.appendChild(drop);
+            }
+        }
+
+        // Transition function
+        function showTransition(title, description) {
+            const transitionScreen = document.getElementById('transitionScreen');
+            const transitionText = document.getElementById('transitionText');
+            
+            transitionText.innerHTML = `ПЕРЕХОД В РАЗДЕЛ: ${title}<br><br><span style="font-size: 16px; opacity: 0.8;">${description}</span>`;
+            transitionScreen.style.display = 'flex';
+            
+            setTimeout(() => {
+                transitionScreen.style.display = 'none';
+                // Здесь можно добавить реальный переход на другую страницу
+                alert(`Переход в раздел: ${title}\n\n${description}`);
+            }, 3000);
+        }
+
+        // Boot sequence
+        document.addEventListener('DOMContentLoaded', function() {
+            createMatrixRain();
+            
+            setTimeout(() => {
+                document.getElementById('bootScreen').style.opacity = '0';
+                document.getElementById('bootScreen').style.transition = 'opacity 1s ease';
+                
+                setTimeout(() => {
+                    document.getElementById('bootScreen').style.display = 'none';
+                    
+                    // Show main content
+                    const mainContent = document.getElementById('mainContent');
+                    mainContent.style.opacity = '1';
+                    mainContent.style.transform = 'translateY(0)';
+                    mainContent.style.transition = 'all 1s ease';
+                    
+                    // Animate benefit cards
+                    const benefitCards = document.querySelectorAll('.benefit-card');
+                    benefitCards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                            card.style.animation = 'fadeInUp 0.8s ease forwards';
+                        }, index * 150 + 500);
+                    });
+                    
+                    // Animate registration section
+                    setTimeout(() => {
+                        const regSection = document.querySelector('.registration-section');
+                        regSection.style.opacity = '1';
+                        regSection.style.transform = 'translateY(0)';
+                        regSection.style.animation = 'fadeInUp 1s ease forwards';
+                    }, 1200);
+
+                    // Animate info cards
+                    setTimeout(() => {
+                        const infoCards = document.querySelectorAll('.info-card');
+                        infoCards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                                card.style.animation = 'fadeInUp 0.8s ease forwards';
+                            }, index * 200);
+                        });
+                    }, 1500);
+
+                    // Animate footer
+                    setTimeout(() => {
+                        document.querySelector('.footer').style.opacity = '1';
+                        document.querySelector('.footer').style.transition = 'opacity 1s ease';
+                    }, 2000);
+                    
+                }, 1000);
+            }, 5000);
+        });
+
+        // Form submission
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const terminal = document.querySelector('.terminal-text');
+            
+            // Clear existing responses
+            const existingResponses = terminal.querySelectorAll('.command-line');
+            if (existingResponses.length > 4) {
+                for (let i = 4; i < existingResponses.length; i++) {
+                    terminal.removeChild(existingResponses[i]);
+                }
+            }
+            
+            // Add new responses
+            const processing = document.createElement('div');
+            processing.className = 'command-line';
+            processing.innerHTML = `<span class="prompt">></span> ОБРАБОТКА ЗАПРОСА РЕГИСТРАЦИИ...`;
+            terminal.appendChild(processing);
+            
+            setTimeout(() => {
+                const verifying = document.createElement('div');
+                verifying.className = 'command-line';
+                verifying.innerHTML = `<span class="prompt">></span> ПРОВЕРКА ДАННЫХ...`;
+                terminal.appendChild(verifying);
+            }, 800);
+            
+            setTimeout(() => {
+                const success = document.createElement('div');
+                success.className = 'command-line';
+                success.innerHTML = `<span class="prompt">></span> <span style="color: #00ff00">РЕГИСТРАЦИЯ УСПЕШНА! ДОСТУП ПРЕДОСТАВЛЕН.</span>`;
+                terminal.appendChild(success);
+                
+                // Update user count
+                document.querySelector('.header-stats span:nth-child(2)').textContent = 'ПОЛЬЗОВАТЕЛИ: 1';
+            }, 1600);
+            
+            this.reset();
+        });
+    </script>
+</body>
+</html>
